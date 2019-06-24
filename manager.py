@@ -44,7 +44,6 @@ def edit_creature(key):
     Used to edit the creature object at that key.
     Modify traits, add edges and hindrances
 
-    TODO: allow the removal of skills, edges, hindrances
     """
     global creatures
     global items
@@ -54,8 +53,9 @@ def edit_creature(key):
         return()
     user_input = ""
     error_line = ""
-    accepted = ['improve', 'reduce','give','skill', 'edge', 'hindrance', 'special', 'force', 'remove', 'wild_card', 'animal']
+    accepted = ['improve', 'reduce','give','skill', 'edge', 'hindrance', 'special', 'force', 'remove', 'wild_card', 'animal'] #check user inputs against this list
     while user_input != "done":
+        # clear the screen, display any error from last loop, wait for user input
         os.system('cls' if os.name=='nt' else 'clear')
         print("Editing '{}'. Type 'done' when done modifying".format(key))
         if error_line!="":
@@ -65,7 +65,8 @@ def edit_creature(key):
         print(creatures[key])
         print("")
         user_input = input("sw helper ... C$ ")
-        if user_input=="done":
+        # may also want to exit on inputs like 'exit' or 'quit'
+        if user_input=="done": # if they want out, END IT!
             break
 
         user_input = user_input.split()
@@ -73,7 +74,17 @@ def edit_creature(key):
 
         # raise/lower/give/add_skill/
 
+        # only try doing things if we recognize the first word! 
         if user_input[0] in accepted:
+
+            # I don't like this way of catching things...
+            if len(user_input)==1:
+                # user just put in a single word
+                # none of the commands work like that
+                error_line = "None of the commands work like that..."
+                continue
+
+            # go through a list of possible commands, each one has different args and catches!
             if user_input[0]=='improve':
                 try:
                     if user_input[1] in creatures[key].skills:
@@ -82,9 +93,11 @@ def edit_creature(key):
                     else:
                         # othersise try grabbing the attribute of that name and improve it
                         getattr(creatures[key], user_input[1]).improve() 
-                    creatures[key].refresh()
+                    creatures[key].refresh() # recalculate toughness and fighting 
                 except AttributeError:
+                    # so if we encountered this error (this _should_ be the only one possible
                     error_line = "{} has no attribute {}".format(key, user_input[1])
+            # works exactly like improve, but changed improve() to reduce()
             elif user_input[0]=='reduce':
                 try:
                     if user_input[1] in creatures[key].skills:
@@ -94,15 +107,19 @@ def edit_creature(key):
                     creatures[key].refresh()
                 except AttributeError:
                     error_line="{} has no attribute {}".format(key, user_input[1])
-
+            
+            # add skill! 
             elif user_input[0]=='skill':
+                # if it's length 3, then hopefully they specified the die value
                 if len(user_input)==3:
                     try:
                         creatures[key].add_skill( user_input[1], int(user_input[2]))
                         creatures[key].refresh()
                     except ValueError:
-                        error_line="Cannot cast {} as an integer".format(user_input[2])
+                        # mainly here incase they write "d6" instead of "6"
+                        error_line="Cannot cast {} as an integer".format(user_input[2]) 
                 elif len(user_input)==2:
+                    # in this case they didn't specify the die type, so let's add it as a 4
                     creatures[key].add_skill( user_input[1], 4)
                 else:
                     error_line="'skill' accepts args like 'skill <skill> <die>'."
@@ -114,50 +131,63 @@ def edit_creature(key):
                     error_line="'edge' requires args like 'edge <name> <desc>'"
             elif user_input[0]=='hindrance':
                 if len(user_input)>=3:
-                    description = " ".join(user_input[2:]) # take all the args after the edge name
+                    description = " ".join(user_input[2:]) # take all the args after the hindrance name
                     creatures[key].add_hindrance(user_input[1], description)
                 else:
                     error_line="'hindrance' requires args like 'hindrance <name> <desc>'"
             elif user_input[0]=='special':
                 if len(user_input)>=3:
-                    description = " ".join(user_input[2:]) # take all the args after the edge name
+                    description = " ".join(user_input[2:]) # take all the args after the special ability name
                     creatures[key].add_special(user_input[1], description)
                 else:
                     error_line="'special' requires args like 'hindrance <name> <desc>'"
             elif user_input[0]=='force':
+                # manually set one of the int-like stats to a number
+                #       only works on creature attributes that are numbers (not sw.Traits or dicts or lists)
                 if len(user_input)!=3:
                     print("ya fucked up.")
                 else:
                     try:
-                        if isinstance( getattr(creatures[key], user_input[1]), int) or isinstance( getattr(creatures[key], user_input[1]), float):
+                        # make sure that the attribute the user wants to change is either an int or a float
+                        if isinstance( getattr(creatures[key], user_input[1]), int) or isinstance( getattr(creatures[key], user_input[1]), float): 
                             setattr(creatures[key], user_input[1], float(user_input[2]))
                         else:
                             error_line="{} is type {}, not int or float".format(getattr(creatures[key],user_input[1]), type(getattr(creatures[key], user_input[1])))
                     except ValueError:
+                        # but of course the user's input  might not even be an int or a float...
                         error_line="{} is not a number".format(user_input[2])
                     except AttributeError:
+                        # and they might not hav eeven specified a valid attribute 
                         error_line="{} is not an attribute of {}".format(user_input[1], key)
             elif user_input[0]=='remove':
+                # used to remove  an entry from one of the dicts.
                 if len(user_input)!=3:
-                    error_line = "Syntax error: 'remove <skill/edge/hindrance/special> <name>'"
+                    error_line = "Syntax error: 'remove <skills/edge/hindrance/special> <name>'"
                 else:
                     try:
                         del getattr(creatures[key], user_input[1])[user_input[2]]
                     except AttributeError:
+                        # that thing doesn't exist
                         error_line="{} is not an attribute of {}".format(user_input[1], key)
                     except TypeError:
+                        # they tried using this on a number, list, or an attribute 
                         error_line="This only works on skills, edges, hindrances, and special abilities!"
+
             elif user_input[0]=='animal':
+                # flip the smarts between animal and humanoid
                 if creatures[key].animal:
                     creatures[key].animal = False
                 else:
                     creatures[key].animal = True
             elif user_input[0]=='wild_card':
+                # flip the wild card status
                 if creatures[key].wild_card:
                     creatures[key].wild_card = False
                 else:
                     creatures[key].wild_card = True
-            else:
+            elif user_input[0]=='give':
+                # this is the 'give' option
+                #   currently borked afaik
                 if len(user_input)==2:
                     if key in items:
                         creatures[key].give( items[user_input[1]] )
@@ -165,6 +195,8 @@ def edit_creature(key):
                         error_line = "{} is not in the item database".format(user_input[1])
                 else:
                     error_line = "give requires only 2 arguments, you entered {}".format(len(user_input))
+            else:
+                error_line="{} not recognized. Try '<improve/reduce/give/skill/edge/hindrance'> <arg>".format(user_input[0])
         else:
             error_line="{} not recognized. Try '<improve/reduce/give/skill/edge/hindrance'> <arg>".format(user_input[0])
 
@@ -186,13 +218,16 @@ def new(args):
             print("creature {} already exists. Try 'edit {}'".format(args[2], args[2]))
             return()
         else:
+            # if they are making a unique creature, launch into the editor, above
             creatures[args[2]] = sw.Creature()
             edit_creature(args[2])
+
     elif args[1] in ['item', 'Item', 'Items', 'items']:
         if args[2] in items:
             print("That item already exists!")
             return()
 
+        # have the user input a string description and a number-like weight
         desc = input("Item description: ")
         while True:
             try:
@@ -203,6 +238,9 @@ def new(args):
         items[args[2]] = sw.gear( args[2], weight, desc )
 
 def list_grp():
+    """
+    just spits out the known creatures and items
+    """
     global creatures
     global items
     print("Currently, saved creatures are:")
@@ -213,6 +251,10 @@ def list_grp():
         print("    {}".format(key))
 
 def help_me():
+    """
+    it helps the user if they don't know what to do
+    I just hope people know to type 'help' when they need 'help'
+    """
     print("You've using the Savage Worlds helper")
     print("")
     print("Enter 'exit' to exit")
@@ -244,6 +286,11 @@ def update():
         setattr(creatures[key], 'animal', True)
 
 def main():
+    """
+    master control function
+
+    Just goes in a little loop waiting to hear one of the command words
+    """
     user_input = ""
     out_words = ['q', 'Q', 'quit', 'Quit', 'exit', 'Exit', 'fuck you']
     while user_input not in out_words:
@@ -251,7 +298,7 @@ def main():
         user_input = user_input.split() # split by spaces to get individual arguments
         if user_input[0] in out_words:
             break
-        if user_input[0] in ['help', 'h', 'Help']:
+        if user_input[0] in ['help', 'h', 'Help', 'wtf', 'what', 'wat']:
             help_me()
         if user_input[0] == "new":
             new(user_input)
@@ -266,6 +313,7 @@ def main():
         if user_input[0]=='update':
             update()
 
+    # save any changes to the database to disk
     print("Saving...")
     save()
     print("Goodbye!")
