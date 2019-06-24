@@ -1,0 +1,16 @@
+There are three files here, not including this one.
+
+    database    
+        + python pickle file containing a dictionary. The dictionary has two keys, "items" and "creatures" which themselves are dictionaries of Item and Creature objects. These are both accessed by the manager script. 
+
+    sw_classes
+        + instantiates a couple of classes that are used by the manager script
+
+    manager.py
+        + run either directly like './manager.py' or, I presume, like 'python3 manager'
+        + it enters a little environment where you can interact with the objects in the database
+
+TODO:
+    + write the todo file
+
+
