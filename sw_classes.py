@@ -1,5 +1,5 @@
 import warnings
-from numpy import random
+import numpy as np
 
 def rolldie(die):
     """
@@ -9,7 +9,7 @@ def rolldie(die):
     total = 0
     droll = die
     while droll == die:
-        droll  =  int(die*random.rand(1)[0]) + 1
+        droll  =  int(die*np.random.rand(1)[0]) + 1
         total += droll
 
     return(total)
@@ -25,6 +25,12 @@ class gear():
         self.__id__         = 0
     def __str__(self):
         return(self.name)
+
+def get_sign_str(x):
+    if x>=0:
+        return('+')
+    else:
+        return('')
 
 class Trait():
     """
@@ -59,9 +65,12 @@ class Trait():
             return("d4+{}".format(self.bonus - 2))
         else:
             if self.past_d12!=0:
-                return("d{}+{}".format(self.die, self.past_d12 + self.bonus) )
+                return("d{}{}{}".format(self.die, get_sign_str(self.past_d12+self.bonus), self.past_d12 + self.bonus) )
             else:
-                return("d{}".format(self.die))
+                if self.bonus!=0:
+                    return("d{}{}{}".format(self.die,get_sign_str(self.bonus) ,self.bonus))
+                else:
+                    return("d{}".format(self.die))
 
     # just rolls the die
     def roll(self):
@@ -77,7 +86,7 @@ class Trait():
         elif self.die== 4:
             if self.bonus==0:
                 self.die    = 6 # step up the die if the bonus is 0
-            elif bonus<0:
+            elif self.bonus<0:
                 self.bonus+=1   # bring the onus closer to zero
             else: #wtf????
                 warnings.warn("{} bonus at impossible value {}".format(self,self.bonus))
@@ -223,23 +232,27 @@ class Creature():
         print("Strength {}, ".format(self.strength), end='')
         print("Vigor {}, ".format(self.vigor), end='')
         print("\nSkills: ",end='')
-        for key in self.skills:
+        keylist = np.sort([key for key in self.skills])
+        for key in keylist:
             print("{} {}, ".format(key, self.skills[key] ), end='')
         print("\nDerived: ", end='')
-        print("Toughness {}, ".format(self.toughness), end='')
         print("Pace {}, ".format(self.pace), end='')
         print("Parry {}, ".format(self.parry), end='')
+        print("Toughness {}, ".format(self.toughness), end='')
         if len(self.edges)>0:
             print("\nEdges: ")
-            for key in self.edges:
+            keylist = np.sort( [key for key in self.edges])
+            for key in keylist:
                 print("    -{}: {}".format(key, self.edges[key]))
         if len(self.hindrances)>0:
             print("\nHindrances: ")
-            for key in self.hindrances:
+            keylist = np.sort( [key for key in self.hindrances])
+            for key in keylist:
                 print("    -{}: {}".format(key, self.hindrances[key]))
         if len(self.special)>0:
             print("\nSpecial Abilities: ")
-            for key in self.special:
+            keylist = np.sort([key for key in self.special])
+            for key in keylist:
                 print("    -{}: {}".format(key, self.special[key]))
         return("")
 
