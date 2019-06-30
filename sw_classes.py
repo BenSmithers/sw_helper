@@ -24,7 +24,7 @@ class gear():
         self.weight         = description
         self.__id__         = 0
     def __str__(self):
-        return(self.name)
+        return("{}, {} lbs: {}".format(self.name, self.weight, self.description))
 
 def get_sign_str(x):
     if x>=0:
@@ -140,7 +140,7 @@ class Creature():
         self.parry      = 0.
         self.edges      = {} # dict of strings
         self.hindrances = {} # dict of strings
-        self.gear       = [] # gear is a list so creature can have duplicates
+        self.gear       = [] # Gear is a list so creature can have duplicates
         self.skills     = {} # dictionary of Traits
         self.special    = {} # dict of strings
         self.wild_card  = False
@@ -202,7 +202,7 @@ class Creature():
 
     def give(self, thing):
         if isinstance(thing, gear):
-            self.gear.append( gear )
+            self.gear.append( thing )
     
 
     # just rolls the trait. never really uses this
@@ -254,6 +254,10 @@ class Creature():
             keylist = np.sort([key for key in self.special])
             for key in keylist:
                 print("    -{}: {}".format(key, self.special[key]))
+        if len(self.gear)>0:
+            print("\nGear: ")
+            for thingy in self.gear:
+                print("    {}".format(thingy))
         return("")
 
 
