@@ -236,7 +236,7 @@ def edit_creature(key):
             # this is the 'give' option
             #   currently borked afaik
             if len(user_input)==2:
-                if key in items:
+                if user_input[1] in items:
                     creatures[key].give( items[user_input[1]] )
                 else:
                     error_line = "{} is not in the item database".format(user_input[1])
@@ -282,7 +282,7 @@ def new(args):
                 break
             except ValueError:
                 print("that's not an acceptable weight")
-        items[args[2]] = sw.gear( args[2], weight, desc )
+        items[args[2]] = sw.Gear( args[2], weight, desc )
 
 def list_grp():
     """
@@ -358,8 +358,7 @@ def update():
     return() # don't do anything, this is deprecated! 
     global creatures
     for key in creatures:
-        setattr(creatures[key], 'wild_card', False)
-        setattr(creatures[key], 'animal', True)
+        creatures[key].gear = []
 
 
 def main():
