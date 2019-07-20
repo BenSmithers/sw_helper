@@ -7,6 +7,21 @@ import os
 creatures   = {}
 items       = {}
 
+class _GetCharObj:
+    def __init__(self):
+        import tty, sys
+    def __call__(self):
+        import tty, sys, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return(ch)
+
 def load():
     """
     loads in the database pickle
@@ -317,7 +332,7 @@ def help_me():
     print("")
 
 def stat(key):
-    os.system('cls' if os.name=='nt' else 'clear')
+    print("")
     global creatures
     if key in creatures:
         print("{}: ".format(key))
@@ -343,12 +358,13 @@ def search(arg):
     global items
     
     print("Searching for {}".format(search_term))
+    print("")
     for key in creatures:
         if search_term in key:
-            print("Creature: {}".format(key))
+            print("Found Creature: {}".format(key))
     for key in items:
         if search_term in key:
-            print("Item: {}".format(key))
+            print("Found Item: {}".format(key))
 
 
 
@@ -367,12 +383,22 @@ def main():
 
     Just goes in a little loop waiting to hear one of the command words
     """
+    print("=== Welcome to the SWADE Helper! ===")
+    print("")
+    print("Not sure what to do? Try 'help'")
+    print("")
+    print("")
+    print("Type 'quit' or 'exit' to exit")
+    print("") 
+    previous_inputs=[]
     user_input = ""
     out_words = ['q', 'Q', 'quit', 'Quit', 'exit', 'Exit', 'fuck you']
     while user_input not in out_words:
         user_input = input("sw helper ... $  ")
         if user_input=="":
             continue
+        previous_inputs.append(user_input)
+        
         user_input = user_input.split() # split by spaces to get individual arguments
         if user_input[0] in out_words:
             break
@@ -380,7 +406,7 @@ def main():
             help_me()
         if user_input[0] == "new":
             new(user_input)
-        if user_input[0] =='list':
+        if user_input[0] in ['list', 'ls']:
             list_grp()
         if user_input[0] =='edit':
             if len(user_input)>1:
@@ -390,6 +416,8 @@ def main():
                 stat(user_input[1])
         if user_input[0]=='update':
             update()
+        if user_input[0]=='clear':
+            os.system('cls' if os.name=='nt' else 'clear')
         if user_input[0] in ['search', 'Search', 'find']:
             search(user_input)
 
